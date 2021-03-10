@@ -40,17 +40,19 @@ public class FeedAdapter extends ArrayAdapter {
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
 
-        View view = layoutInflater.inflate(layoutResource, parent, false);
-        TextView tvName = view.findViewById(R.id.tvName);
-        TextView tvArtist = view.findViewById(R.id.tvArtist);
-        TextView tvSummary = view.findViewById(R.id.tvSummary);
+        if(convertView == null){
+            convertView = layoutInflater.inflate(layoutResource, parent, false);
+        }
+        TextView tvName = convertView.findViewById(R.id.tvName);
+        TextView tvArtist = convertView.findViewById(R.id.tvArtist);
+        TextView tvSummary = convertView.findViewById(R.id.tvSummary);
 
         FeedEntry currentApp = applications.get(position);
         tvName.setText(currentApp.getName());
         tvArtist.setText(currentApp.getArtist());
         tvSummary.setText(currentApp.getSummary());
 
-        return view;
+        return convertView;
 
     }
 }
