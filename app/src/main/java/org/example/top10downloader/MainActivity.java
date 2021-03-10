@@ -2,6 +2,8 @@ package org.example.top10downloader;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -15,12 +17,16 @@ import java.net.URL;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
+    private ListView listApps;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        listApps = findViewById(R.id.xmlListView);
+
         Log.d(TAG, "onCreate: starting AsyncTask");
         DownloadData downloadData = new DownloadData();
         downloadData.execute("http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=10/xml");
@@ -49,6 +55,12 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "onPostExecute: parameter is " + s);
             ParseApplication parseApplication = new ParseApplication();
             parseApplication.parse(s);
+
+            ArrayAdapter<FeedEntry> arrayAdapter = new ArrayAdapter<>(
+                    MainActivity.this, R.layout.list_item, parseApplication.getApplications());
+            listApps.setAdapter(arrayAdapter);
+
+
         }
 
         private String downloadXML(String urlPath){
@@ -89,29 +101,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-
-
-
-
-//    private class DownloadData extends AsyncTask<String, Void, String> {
-//
-//        private static final String TAG = "DownloadData";
-//
-//        @Override
-//        protected void onPostExecute(String s) {
-//
-//
-//            super.onPostExecute(s);
-//            Log.d(TAG, "onPostExecute: parameter is " + s);
-//        }
-//
-//        @Override
-//        protected String doInBackground(String... strings) {
-//
-//            Log.d(TAG, "doInBackground: starts with: " + strings[0]);
-//            return "doInBackground completed.";
-//        }
-//    }
 
 
 
