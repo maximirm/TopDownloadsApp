@@ -2,8 +2,11 @@ package org.example.top10downloader;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.ListView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.BufferedReader;
@@ -26,18 +29,51 @@ public class MainActivity extends AppCompatActivity {
 
         listApps = findViewById(R.id.xmlListView);
 
-        Log.d(TAG, "onCreate: starting AsyncTask");
-        DownloadData downloadData = new DownloadData();
-        downloadData.execute("http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=10/xml");
-        Log.d(TAG, "onCreate: done");
+        downloadUrl("http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=10/xml");
 
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        getMenuInflater().inflate(R.menu.feeds_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+
+        int id = item.getItemId();
+        String feedURl;
+        switch (id){
+            case R.id.mnuFree:
+                feedURl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=10/xml";
+                break;
+            case R.id.mnuPaid:
+                feedURl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/toppaidapplications/limit=10/xml";
+                break;
+            case R.id.mnuSongs:
+                feedURl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topsongs/limit=10/xml";
+                break;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+        downloadUrl(feedURl);
+        return true;
+    }
+
+    private void downloadUrl(String feedURl) {
+        //        Log.d(TAG, "onCreate: starting AsyncTask");
+        DownloadData downloadData = new DownloadData();
+        downloadData.execute(feedURl);
+        Log.d(TAG, "downloadUrl: done");
+
+    }
 
     private class DownloadData {
 
         protected void execute(final String url) {
-            Log.d(TAG, "doInBackground: starts with " + url);
+//            Log.d(TAG, "doInBackground: starts with " + url);
 
             new Thread(() -> {
                 final String rssFeed = downloadXML(url);
@@ -51,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(String s) {
 
 
-            Log.d(TAG, "onPostExecute: parameter is " + s);
+//            Log.d(TAG, "onPostExecute: parameter is " + s);
             ParseApplication parseApplication = new ParseApplication();
             parseApplication.parse(s);
 
