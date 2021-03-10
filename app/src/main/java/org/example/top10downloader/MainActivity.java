@@ -47,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
 
 
             Log.d(TAG, "onPostExecute: parameter is " + s);
+            ParseApplication parseApplication = new ParseApplication();
+            parseApplication.parse(s);
         }
 
         private String downloadXML(String urlPath){
