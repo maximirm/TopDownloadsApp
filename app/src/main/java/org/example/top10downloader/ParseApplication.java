@@ -31,6 +31,7 @@ public class ParseApplication {
         boolean status = true;
         FeedEntry currentRecord = null;
         boolean inEntry = false;
+        boolean gotImage = false;
         String textValue = "";
 
         try {
@@ -47,6 +48,11 @@ public class ParseApplication {
                         if ("entry".equalsIgnoreCase(tagName)) {
                             inEntry = true;
                             currentRecord = new FeedEntry();
+                        } else if (("image".equalsIgnoreCase(tagName)) && inEntry){
+                            String imageResolution = xpp.getAttributeValue(null, "height");
+                            if (imageResolution != null){
+                                gotImage = "53".equalsIgnoreCase(imageResolution);
+                            }
                         }
                         break;
 
@@ -69,7 +75,9 @@ public class ParseApplication {
                             } else if ("summary".equalsIgnoreCase(tagName)) {
                                 currentRecord.setSummary(textValue);
                             } else if ("image".equalsIgnoreCase(tagName)) {
-                                currentRecord.setImageURL(textValue);
+                                if (gotImage){
+                                    currentRecord.setImageURL(textValue);
+                                }
                             }
                         }
                         break;
