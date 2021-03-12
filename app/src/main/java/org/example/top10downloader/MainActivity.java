@@ -20,6 +20,12 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
     private ListView listApps;
+    private String feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=%d/xml";
+    private int feedLimit = 10;
+    private String feedCashedUrl = "INVALIDATED";
+    public static final String STATE_URL = "feedUrl";
+    public static final String STATE_LIMIT = "feedLimit";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,7 +35,11 @@ public class MainActivity extends AppCompatActivity {
 
         listApps = findViewById(R.id.xmlListView);
 
-        downloadUrl("http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=10/xml");
+        if(savedInstanceState != null){
+            feedUrl = savedInstanceState.getString(STATE_URL);
+            feedLimit = savedInstanceState.getInt(STATE_LIMIT);
+        }
+        downloadUrl(String.format(feedUrl, feedLimit));
 
     }
 
@@ -37,6 +47,11 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
 
         getMenuInflater().inflate(R.menu.feeds_menu, menu);
+        if(feedLimit == 10) {
+            menu.findItem(R.id.mnu10).setChecked(true);
+        } else {
+            menu.findItem(R.id.mnu25).setChecked(true);
+        }
         return true;
     }
 
@@ -44,30 +59,56 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
         int id = item.getItemId();
-        String feedURl;
         switch (id){
             case R.id.mnuFree:
-                feedURl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=10/xml";
+                feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=%d/xml";
                 break;
             case R.id.mnuPaid:
-                feedURl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/toppaidapplications/limit=10/xml";
+                feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/toppaidapplications/limit=%d/xml";
                 break;
             case R.id.mnuSongs:
-                feedURl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topsongs/limit=10/xml";
+                feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topsongs/limit=%d/xml";
+                break;
+            case R.id.mnu10:
+            case R.id.mnu25:
+                if(!item.isChecked()) {
+                    item.setChecked(true);
+                    feedLimit = 35 - feedLimit;
+//                    Log.d(TAG, "onOptionsItemSelected: " + item.getTitle() + " setting feedLimit to " + feedLimit);
+                } else {
+//                    Log.d(TAG, "onOptionsItemSelected: " + item.getTitle() + " feedLimit unchanged");
+                }
+                break;
+            case R.id.mnuRefresh:
+                feedCashedUrl = "INVALIDATED";
                 break;
             default:
                 return super.onOptionsItemSelected(item);
         }
-        downloadUrl(feedURl);
+        downloadUrl(String.format(feedUrl, feedLimit));
         return true;
     }
 
-    private void downloadUrl(String feedURl) {
-        //        Log.d(TAG, "onCreate: starting AsyncTask");
-        DownloadData downloadData = new DownloadData();
-        downloadData.execute(feedURl);
-        Log.d(TAG, "downloadUrl: done");
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
 
+        outState.putString(STATE_URL, feedUrl);
+        outState.putInt(STATE_LIMIT, feedLimit);
+        super.onSaveInstanceState(outState);
+    }
+
+    private void downloadUrl(String feedURl) {
+
+        if(!feedURl.equalsIgnoreCase(feedCashedUrl)) {
+
+//            Log.d(TAG, "onCreate: starting AsyncTask");
+            DownloadData downloadData = new DownloadData();
+            downloadData.execute(feedURl);
+            feedCashedUrl = feedURl;
+//            Log.d(TAG, "downloadUrl: done");
+        } else {
+//            Log.d(TAG, "downloadUrl: URL not changed");
+        }
     }
 
     private class DownloadData {
@@ -91,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
             ParseApplication parseApplication = new ParseApplication();
             parseApplication.parse(s);
 
-            FeedAdapter feedAdapter = new FeedAdapter(MainActivity.this, R.layout.list_record,
+            FeedAdapter<FeedEntry> feedAdapter = new FeedAdapter<>(MainActivity.this, R.layout.list_record,
                     parseApplication.getApplications());
             listApps.setAdapter(feedAdapter);
 
@@ -104,8 +145,8 @@ public class MainActivity extends AppCompatActivity {
             try {
                 URL url = new URL(urlPath);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                int response = connection.getResponseCode();
-                Log.d(TAG, "downloadXML: the response code was " + response);
+//                int response = connection.getResponseCode();
+//                Log.d(TAG, "downloadXML: the response code was " + response);
                 BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
                 int charsRead;
